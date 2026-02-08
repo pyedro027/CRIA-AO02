@@ -697,11 +697,51 @@ loginForm.addEventListener("submit", (event) => {
   startCheckin();
 });
 
-workerRole.addEventListener("change", () => {
-  adminVisitWrapper.style.display =
-    workerRole.value === "Administrativo" ? "flex" : "none";
-  if (workerRole.value !== "Administrativo") adminVisit.checked = false;
-});
+const SECTORS_BY_ROLE = {
+  Obra: ["Obra"],
+  Logística: ["Logística"],
+};
+
+// atualiza o select de setor baseado na função
+const updateSectorByRole = () => {
+  const role = workerRole.value;
+
+  // mantém a regra do administrativo
+  adminVisitWrapper.style.display = role === "Administrativo" ? "flex" : "none";
+  if (role !== "Administrativo") adminVisit.checked = false;
+
+  // se for Obra ou Logística, trava setor automático
+  if (SECTORS_BY_ROLE[role]) {
+    workerSector.innerHTML = `<option value="" disabled>Selecione</option>`;
+
+    SECTORS_BY_ROLE[role].forEach((sector) => {
+      const opt = document.createElement("option");
+      opt.value = sector;
+      opt.textContent = sector;
+      workerSector.appendChild(opt);
+    });
+
+    // seleciona automaticamente
+    workerSector.value = SECTORS_BY_ROLE[role][0];
+  } else {
+    // se não for Obra/Logística, volta o setor "livre"
+    // (coloque aqui suas opções padrão de setor)
+    workerSector.innerHTML = `
+      <option value="" disabled selected>Selecione</option>
+      <option value="Produção">Produção</option>
+      <option value="Manutenção">Manutenção</option>
+      <option value="Logística">Logística</option>
+      <option value="Administrativo">Administrativo</option>
+      <option value="Outro">Outro</option>
+    `;
+  }
+};
+
+workerRole.addEventListener("change", updateSectorByRole);
+
+// opcional: já aplica ao carregar
+updateSectorByRole();
+
 
 checklistContainer.addEventListener("change", handleStatusChange);
 checklistContainer.addEventListener("input", handleObservationChange);
@@ -823,3 +863,4 @@ document.addEventListener("keydown", (e) => {
     document.body.style.overflow = "auto";
   }
 });
+
