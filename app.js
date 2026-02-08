@@ -697,50 +697,62 @@ loginForm.addEventListener("submit", (event) => {
   startCheckin();
 });
 
+// Setores disponíveis por função
 const SECTORS_BY_ROLE = {
-  Obra: ["Obra"],
+  Soldador: ["Produção", "Manutenção", "Obra"],
+  Eletricista: ["Manutenção", "Obra"],
   Logística: ["Logística"],
+  Manutenção: ["Manutenção", "Produção", "Obra"],
+  Produção: ["Produção"],
+  Obra: ["Obra"],
+  Administrativo: ["Administrativo"],
+  Outro: ["Produção", "Manutenção", "Logística", "Obra", "Administrativo"],
 };
+
+const DEFAULT_SECTORS = [
+  "Produção",
+  "Manutenção",
+  "Logística",
+  "Obra",
+  "Administrativo",
+  "Outro",
+];
 
 // atualiza o select de setor baseado na função
 const updateSectorByRole = () => {
   const role = workerRole.value;
 
-  // mantém a regra do administrativo
-  adminVisitWrapper.style.display = role === "Administrativo" ? "flex" : "none";
+  // regra do administrativo
+  adminVisitWrapper.style.display =
+    role === "Administrativo" ? "flex" : "none";
   if (role !== "Administrativo") adminVisit.checked = false;
 
-  // se for Obra ou Logística, trava setor automático
-  if (SECTORS_BY_ROLE[role]) {
-    workerSector.innerHTML = `<option value="" disabled>Selecione</option>`;
+  // limpa o select de setor
+  workerSector.innerHTML =
+    `<option value="" disabled selected>Selecione</option>`;
 
-    SECTORS_BY_ROLE[role].forEach((sector) => {
-      const opt = document.createElement("option");
-      opt.value = sector;
-      opt.textContent = sector;
-      workerSector.appendChild(opt);
-    });
+  const sectors = SECTORS_BY_ROLE[role] || DEFAULT_SECTORS;
 
-    // seleciona automaticamente
-    workerSector.value = SECTORS_BY_ROLE[role][0];
-  } else {
-    // se não for Obra/Logística, volta o setor "livre"
-    // (coloque aqui suas opções padrão de setor)
-    workerSector.innerHTML = `
-      <option value="" disabled selected>Selecione</option>
-      <option value="Produção">Produção</option>
-      <option value="Manutenção">Manutenção</option>
-      <option value="Logística">Logística</option>
-      <option value="Administrativo">Administrativo</option>
-      <option value="Outro">Outro</option>
-    `;
+  sectors.forEach((sector) => {
+    const opt = document.createElement("option");
+    opt.value = sector;
+    opt.textContent = sector;
+    workerSector.appendChild(opt);
+  });
+
+  // se só tiver 1 setor, seleciona automático
+  if (sectors.length === 1) {
+    workerSector.value = sectors[0];
   }
 };
 
+// quando mudar a função
 workerRole.addEventListener("change", updateSectorByRole);
 
-// opcional: já aplica ao carregar
+// ao carregar a página
 updateSectorByRole();
+
+
 
 
 checklistContainer.addEventListener("change", handleStatusChange);
@@ -863,4 +875,5 @@ document.addEventListener("keydown", (e) => {
     document.body.style.overflow = "auto";
   }
 });
+
 
