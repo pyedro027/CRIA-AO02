@@ -697,26 +697,51 @@ loginForm.addEventListener("submit", (event) => {
   startCheckin();
 });
 
-// Setores disponíveis por função
+// Setores disponíveis por função (realista)
 const SECTORS_BY_ROLE = {
-  Soldador: ["Produção", "Manutenção", "Obra"],
-  Eletricista: ["Manutenção", "Obra"],
-  Logística: ["Logística"],
+  Soldador: ["Produção", "Manutenção", "Almoxarifado"],
+  Eletricista: ["Manutenção", "Produção", "Obra"],
+  Logística: [
+    "Recebimento",
+    "Armazenagem",
+    "Separação",
+    "Expedição",
+    "Transporte",
+    "Controle de Estoque",
+  ],
   Manutenção: ["Manutenção", "Produção", "Obra"],
   Produção: ["Produção"],
-  Obra: ["Obra"],
+  Obra: [
+    "Produção",
+    "Manutenção",
+    "Elétrica",
+    "Hidráulica",
+    "Logística de Obra",
+    "Almoxarifado",
+    "Administrativo de Obra",
+    "Segurança do Trabalho",
+  ],
   Administrativo: ["Administrativo"],
-  Outro: ["Produção", "Manutenção", "Logística", "Obra", "Administrativo"],
+  Outro: [
+    "Produção",
+    "Manutenção",
+    "Logística",
+    "Almoxarifado",
+    "Administrativo",
+  ],
 };
+
 
 const DEFAULT_SECTORS = [
   "Produção",
   "Manutenção",
   "Logística",
   "Obra",
+  "Almoxarifado",
   "Administrativo",
   "Outro",
 ];
+
 
 // atualiza o select de setor baseado na função
 const updateSectorByRole = () => {
@@ -875,5 +900,6 @@ document.addEventListener("keydown", (e) => {
     document.body.style.overflow = "auto";
   }
 });
+
 
 
