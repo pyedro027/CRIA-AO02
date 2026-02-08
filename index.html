@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check-in de EPI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__content">
+      <h1>Check-in de EPI</h1>
+      <nav class="topbar__nav" aria-label="Navegação principal">
+        <button class="btn btn--ghost" type="button" data-view="checkin">Check-in</button>
+        <button class="btn btn--ghost" type="button" data-view="history">Histórico</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="view-login" class="view">
+      <div class="card">
+        <h2>Iniciar check-in</h2>
+        <p class="helper">Preencha os dados do trabalhador para gerar a lista de EPIs.</p>
+        <form id="login-form">
+          <div class="grid">
+            <label class="field">
+              <span>Nome do trabalhador</span>
+              <input type="text" id="worker-name" required placeholder="Ex: Ana Beatriz Souza" />
+            </label>
+            <label class="field">
+              <span>Matrícula/ID (opcional)</span>
+              <input type="text" id="worker-id" placeholder="Ex: 2045" />
+            </label>
+            <label class="field">
+              <span>Função</span>
+              <select id="worker-role" required>
+                <option value="" disabled selected>Selecione</option>
+                <option value="Soldador">Soldador</option>
+                <option value="Eletricista">Eletricista</option>
+                <option value="Logística">Logística</option>
+                <option value="Manutenção">Manutenção</option>
+                <option value="Produção">Produção</option>
+                <option value="Obra">Obra</option>
+                <option value="Administrativo">Administrativo</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Setor</span>
+              <select id="worker-sector" required>
+                <option value="" disabled selected>Selecione</option>
+                <option value="Produção">Produção</option>
+                <option value="Manutenção">Manutenção</option>
+                <option value="Logística">Logística</option>
+                <option value="Administrativo">Administrativo</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Turno</span>
+              <select id="worker-shift" required>
+                <option value="" disabled selected>Selecione</option>
+                <option value="Manhã">Manhã</option>
+                <option value="Tarde">Tarde</option>
+                <option value="Noite">Noite</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="field checkbox" id="admin-visit-wrapper">
+            <input type="checkbox" id="admin-visit" />
+            <span>Visita à área operacional (libera checklist básico)</span>
+          </label>
+
+          <div class="actions">
+            <button class="btn" type="submit">Iniciar check-in</button>
+            <button class="btn btn--ghost" type="button" id="demo-button">Demo</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="view-checklist" class="view hidden">
+      <div class="card">
+        <div class="card__header">
+          <div>
+            <h2>Checklist de EPI</h2>
+            <p id="worker-summary" class="helper"></p>
+          </div>
+          <button class="btn btn--ghost" type="button" id="change-role">Trocar função</button>
+        </div>
+
+        <div class="progress">
+          <span id="progress-text">Respondidos: 0/0</span>
+          <div class="progress__bar">
+            <div class="progress__fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <div id="safety-alert" class="alert hidden">
+          ⚠️ Procure o responsável de SST antes de iniciar a atividade.
+        </div>
+
+        <div id="checklist-container" class="checklist"></div>
+
+        <div id="signature-section" class="signature">
+          <h3>Assinatura e confirmação</h3>
+          <label class="field">
+            <span>Assinatura (nome completo)</span>
+            <input type="text" id="signature-input" placeholder="Digite seu nome completo" />
+          </label>
+          <label class="field checkbox">
+            <input type="checkbox" id="truth-confirm" />
+            <span>Confirmo que estou usando os EPIs marcados como OK e informei a verdade.</span>
+          </label>
+          <p class="helper" id="signature-helper"></p>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="button" id="finish-checkin">Finalizar check-in</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-summary" class="view hidden">
+      <div class="card">
+        <h2>Resumo do check-in</h2>
+        <div id="summary-content"></div>
+        <div class="actions">
+          <button class="btn" type="button" id="new-checkin">Novo check-in</button>
+          <button class="btn btn--ghost" type="button" data-view="history">Ir para histórico</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-history" class="view hidden">
+      <div class="card">
+        <div class="card__header">
+          <div>
+            <h2>Histórico</h2>
+            <p class="helper">Consulte check-ins anteriores salvos localmente.</p>
+          </div>
+          <button class="btn btn--ghost" type="button" id="clear-history">Limpar histórico</button>
+        </div>
+
+        <div class="filters">
+          <label class="field">
+            <span>Filtrar por nome</span>
+            <input type="text" id="filter-name" placeholder="Digite o nome" />
+          </label>
+          <label class="field">
+            <span>Data inicial</span>
+            <input type="date" id="filter-start" />
+          </label>
+          <label class="field">
+            <span>Data final</span>
+            <input type="date" id="filter-end" />
+          </label>
+          <button class="btn" type="button" id="apply-filters">Aplicar filtros</button>
+        </div>
+
+        <div id="history-list" class="history"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal__content">
+      <button class="modal__close" type="button" id="modal-close">Fechar</button>
+      <div id="modal-body"></div>
+      <div class="actions modal__actions">
+        <button class="btn" type="button" id="print-record">Imprimir/Exportar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
