@@ -1,3 +1,7 @@
+// =====================================================
+// CHECK-IN DE EPI - app.js (versão limpa e sem duplicações)
+// =====================================================
+
 // Dados de EPIs por função para gerar o checklist dinamicamente.
 const ROLE_EPI_MAP = {
   Soldador: [
@@ -76,6 +80,43 @@ const ROLE_EPI_MAP = {
 const ADMIN_BASE_EPI = ["Capacete", "Óculos", "Botina", "Colete refletivo"];
 const STORAGE_KEY = "epiCheckins";
 
+// =====================================================
+// SETORES POR FUNÇÃO (corrige Obra e Logística com vários setores)
+// =====================================================
+const SECTORS_BY_ROLE = {
+  Soldador: ["Produção", "Manutenção", "Almoxarifado"],
+  Eletricista: ["Manutenção", "Produção", "Elétrica", "Obra"],
+  Logística: [
+    "Recebimento",
+    "Armazenagem",
+    "Separação",
+    "Expedição",
+    "Transporte",
+    "Controle de Estoque",
+    "Inventário",
+    "Conferência",
+  ],
+  Manutenção: ["Manutenção", "Produção", "Obra"],
+  Produção: ["Produção"],
+  Obra: [
+    "Frentes de Serviço",
+    "Estruturas",
+    "Acabamento",
+    "Elétrica",
+    "Hidráulica",
+    "Almoxarifado da Obra",
+    "Logística de Obra",
+    "Administrativo de Obra",
+    "Segurança do Trabalho",
+    "Terraplenagem",
+  ],
+  Administrativo: ["Administrativo"],
+  Outro: ["Produção", "Manutenção", "Logística", "Almoxarifado", "Administrativo", "Obra"],
+};
+
+// =====================================================
+// ELEMENTOS DA TELA
+// =====================================================
 const views = {
   login: document.getElementById("view-login"),
   checklist: document.getElementById("view-checklist"),
@@ -91,19 +132,23 @@ const workerSector = document.getElementById("worker-sector");
 const workerShift = document.getElementById("worker-shift");
 const adminVisit = document.getElementById("admin-visit");
 const adminVisitWrapper = document.getElementById("admin-visit-wrapper");
+
 const checklistContainer = document.getElementById("checklist-container");
 const workerSummary = document.getElementById("worker-summary");
 const progressText = document.getElementById("progress-text");
 const progressFill = document.getElementById("progress-fill");
 const safetyAlert = document.getElementById("safety-alert");
+
 const signatureInput = document.getElementById("signature-input");
 const truthConfirm = document.getElementById("truth-confirm");
 const signatureHelper = document.getElementById("signature-helper");
 const finishButton = document.getElementById("finish-checkin");
+
 const summaryContent = document.getElementById("summary-content");
 const newCheckinButton = document.getElementById("new-checkin");
 const changeRoleButton = document.getElementById("change-role");
 const demoButton = document.getElementById("demo-button");
+
 const historyList = document.getElementById("history-list");
 const filterName = document.getElementById("filter-name");
 const filterStart = document.getElementById("filter-start");
@@ -116,10 +161,16 @@ const modalBody = document.getElementById("modal-body");
 const modalClose = document.getElementById("modal-close");
 const printRecordButton = document.getElementById("print-record");
 
+// =====================================================
+// ESTADO
+// =====================================================
 let currentUser = null;
 let currentChecklist = [];
 let currentRecordForPrint = null;
 
+// =====================================================
+// UI Helpers
+// =====================================================
 const itemEmojis = [
   { keyword: "Capacete", emoji: "🪖" },
   { keyword: "Óculos", emoji: "🕶️" },
@@ -149,6 +200,37 @@ const normalizeText = (text) =>
     .replace(/\s+/g, " ")
     .trim();
 
+// =====================================================
+// Setor por função (dinâmico)
+// =====================================================
+const updateSectorByRole = () => {
+  const role = workerRole.value;
+
+  // administrativo: mostra checkbox visita operacional
+  adminVisitWrapper.style.display = role === "Administrativo" ? "flex" : "none";
+  if (role !== "Administrativo") adminVisit.checked = false;
+
+  // limpa setores
+  workerSector.innerHTML = `<option value="" disabled selected>Selecione</option>`;
+
+  const sectors = SECTORS_BY_ROLE[role] || [];
+
+  sectors.forEach((sector) => {
+    const opt = document.createElement("option");
+    opt.value = sector;
+    opt.textContent = sector;
+    workerSector.appendChild(opt);
+  });
+
+  // se só tiver 1 setor, seleciona automaticamente
+  if (sectors.length === 1) {
+    workerSector.value = sectors[0];
+  }
+};
+
+// =====================================================
+// Assinatura
+// =====================================================
 const signatureMatches = (signature, name) => {
   const normalizedSignature = normalizeText(signature);
   const normalizedName = normalizeText(name);
@@ -160,15 +242,45 @@ const signatureMatches = (signature, name) => {
 
   const firstNameMatches = signatureWords.includes(nameWords[0]);
   const lastNameMatches =
-    nameWords.length > 1
-      ? signatureWords.includes(nameWords[nameWords.length - 1])
-      : true;
+    nameWords.length > 1 ? signatureWords.includes(nameWords[nameWords.length - 1]) : true;
 
   const allWordsPresent = nameWords.every((word) => signatureWords.includes(word));
-
   return (firstNameMatches && lastNameMatches) || allWordsPresent;
 };
 
+const updateSignatureHelper = (message, isError = false) => {
+  signatureHelper.textContent = message;
+  signatureHelper.style.color = isError ? "var(--danger)" : "var(--muted)";
+};
+
+const updateSignatureValidation = () => {
+  if (!currentUser) return false;
+
+  const signatureValue = signatureInput.value.trim();
+  const confirmation = truthConfirm.checked;
+
+  if (!signatureValue) {
+    updateSignatureHelper("Informe sua assinatura para finalizar.", true);
+    return false;
+  }
+
+  if (!signatureMatches(signatureValue, currentUser.name)) {
+    updateSignatureHelper("A assinatura precisa corresponder ao nome do trabalhador.", true);
+    return false;
+  }
+
+  if (!confirmation) {
+    updateSignatureHelper("Confirme a declaração de verdade.", true);
+    return false;
+  }
+
+  updateSignatureHelper("Assinatura validada.");
+  return true;
+};
+
+// =====================================================
+// Checklist
+// =====================================================
 const getChecklistForRole = (role) => {
   if (role === "Administrativo") {
     return adminVisit.checked ? ADMIN_BASE_EPI : [];
@@ -190,6 +302,7 @@ const buildChecklist = () => {
 const updateProgress = () => {
   const total = currentChecklist.length;
   const answered = currentChecklist.filter((item) => item.status).length;
+
   progressText.textContent = `Respondidos: ${answered}/${total}`;
   const percent = total === 0 ? 100 : Math.round((answered / total) * 100);
   progressFill.style.width = `${percent}%`;
@@ -255,10 +368,7 @@ const createPhotoSection = (item) => {
   wrapper.appendChild(input);
   wrapper.appendChild(preview);
 
-  wrapper.dataset.visible =
-    item.status === "Danificado" || item.status === "Não possuo";
-
-  if (wrapper.dataset.visible !== "true") {
+  if (!(item.status === "Danificado" || item.status === "Não possuo")) {
     wrapper.style.display = "none";
   }
 
@@ -271,8 +381,7 @@ const renderChecklist = () => {
   if (currentChecklist.length === 0) {
     const empty = document.createElement("p");
     empty.className = "helper";
-    empty.textContent =
-      "Sem EPIs obrigatórios para esta função. Marque visita operacional se necessário.";
+    empty.textContent = "Sem EPIs obrigatórios para esta função. Marque visita operacional se necessário.";
     checklistContainer.appendChild(empty);
   }
 
@@ -281,7 +390,6 @@ const renderChecklist = () => {
     card.className = "item";
 
     const emoji = itemEmojis.find((entry) => item.name.includes(entry.keyword));
-
     const title = document.createElement("div");
     title.className = "item__title";
     title.textContent = `${emoji ? emoji.emoji + " " : ""}${item.name}`;
@@ -297,38 +405,6 @@ const renderChecklist = () => {
   updateProgress();
 };
 
-const updateSignatureHelper = (message, isError = false) => {
-  signatureHelper.textContent = message;
-  signatureHelper.style.color = isError ? "var(--danger)" : "var(--muted)";
-};
-
-const updateSignatureValidation = () => {
-  if (!currentUser) return false;
-  const signatureValue = signatureInput.value.trim();
-  const confirmation = truthConfirm.checked;
-
-  if (!signatureValue) {
-    updateSignatureHelper("Informe sua assinatura para finalizar.", true);
-    return false;
-  }
-
-  if (!signatureMatches(signatureValue, currentUser.name)) {
-    updateSignatureHelper(
-      "A assinatura precisa corresponder ao nome do trabalhador.",
-      true
-    );
-    return false;
-  }
-
-  if (!confirmation) {
-    updateSignatureHelper("Confirme a declaração de verdade.", true);
-    return false;
-  }
-
-  updateSignatureHelper("Assinatura validada.");
-  return true;
-};
-
 const updateChecklistFromInputs = () => {
   document.querySelectorAll(".status-select").forEach((select) => {
     const item = currentChecklist.find((entry) => entry.id === select.dataset.id);
@@ -338,21 +414,6 @@ const updateChecklistFromInputs = () => {
   document.querySelectorAll(".observation-input").forEach((input) => {
     const item = currentChecklist.find((entry) => entry.id === input.dataset.id);
     if (item) item.observation = input.value;
-  });
-
-  document.querySelectorAll(".photo-input").forEach((input) => {
-    const item = currentChecklist.find((entry) => entry.id === input.dataset.id);
-    if (!item) return;
-
-    const photoSection = input.closest(".item__photo");
-    if (
-      item.status === "Danificado" ||
-      item.status === "Não possuo"
-    ) {
-      photoSection.style.display = "flex";
-    } else {
-      photoSection.style.display = "none";
-    }
   });
 
   updateProgress();
@@ -365,6 +426,9 @@ const readPhotoFile = (file) =>
     reader.readAsDataURL(file);
   });
 
+// =====================================================
+// Storage
+// =====================================================
 const getStoredRecords = () => {
   const raw = localStorage.getItem(STORAGE_KEY);
   return raw ? JSON.parse(raw) : [];
@@ -374,6 +438,9 @@ const saveRecords = (records) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
 };
 
+// =====================================================
+// Registro e resumo
+// =====================================================
 const buildRecord = () => {
   const date = new Date();
   const okItems = currentChecklist.filter((item) => item.status === "OK");
@@ -410,16 +477,33 @@ const renderSummary = (record) => {
       <p><strong>Turno:</strong> ${record.shift}</p>
       <p><strong>Data/Hora:</strong> ${record.dateLabel}</p>
     </div>
+
     <div class="summary-block">
       <h3>Itens OK</h3>
       <ul>
-        ${record.okItems.length ? record.okItems.map((item) => `<li>${item.name}</li>`).join("") : "<li>Nenhum item marcado como OK.</li>"}
+        ${
+          record.okItems.length
+            ? record.okItems.map((item) => `<li>${item.name}</li>`).join("")
+            : "<li>Nenhum item marcado como OK.</li>"
+        }
       </ul>
     </div>
+
     <div class="summary-block">
       <h3>Itens com problema</h3>
       <ul>
-        ${record.issueItems.length ? record.issueItems.map((item) => `<li>${item.name} - ${item.status}${item.observation ? ` (Obs: ${item.observation})` : ""}</li>`).join("") : "<li>Sem pendências.</li>"}
+        ${
+          record.issueItems.length
+            ? record.issueItems
+                .map(
+                  (item) =>
+                    `<li>${item.name} - ${item.status}${
+                      item.observation ? ` (Obs: ${item.observation})` : ""
+                    }</li>`
+                )
+                .join("")
+            : "<li>Sem pendências.</li>"
+        }
       </ul>
     </div>
   `;
@@ -438,8 +522,10 @@ const renderSummary = (record) => {
       link.href = item.photo;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
-      link.innerHTML = `<img class="photo-preview" src="${item.photo}" alt="Foto do item ${item.name}" />
-        <span>${item.name}</span>`;
+      link.innerHTML = `
+        <img class="photo-preview" src="${item.photo}" alt="Foto do item ${item.name}" />
+        <span>${item.name}</span>
+      `;
       grid.appendChild(link);
     });
 
@@ -448,11 +534,14 @@ const renderSummary = (record) => {
   }
 };
 
+// =====================================================
+// Histórico, filtros e modal
+// =====================================================
 const renderHistory = (records) => {
   historyList.innerHTML = "";
 
   if (records.length === 0) {
-    historyList.innerHTML = "<p class=\"helper\">Nenhum check-in encontrado.</p>";
+    historyList.innerHTML = '<p class="helper">Nenhum check-in encontrado.</p>';
     return;
   }
 
@@ -460,17 +549,16 @@ const renderHistory = (records) => {
     const item = document.createElement("div");
     item.className = "history__item";
 
-    const statusClass =
-      record.statusGeneral === "OK" ? "status-pill--ok" : "status-pill--warn";
+    const statusClass = record.statusGeneral === "OK" ? "status-pill--ok" : "status-pill--warn";
 
     item.innerHTML = `
-      <div>
-        <strong>${record.name}</strong> · ${record.role}
-      </div>
+      <div><strong>${record.name}</strong> · ${record.role}</div>
       <div class="helper">${record.dateLabel}</div>
       <span class="status-pill ${statusClass}">${record.statusGeneral}</span>
       <div class="actions">
-        <button class="btn btn--ghost" type="button" data-action="details" data-id="${record.id}">Ver detalhes</button>
+        <button class="btn btn--ghost" type="button" data-action="details" data-id="${record.id}">
+          Ver detalhes
+        </button>
       </div>
     `;
 
@@ -492,42 +580,34 @@ const renderModalDetails = (record) => {
     <div class="summary-block">
       <h3>Itens OK</h3>
       <ul>
-        ${record.okItems.length ? record.okItems.map((item) => `<li>${item.name}</li>`).join("") : "<li>Nenhum item OK.</li>"}
+        ${
+          record.okItems?.length
+            ? record.okItems.map((item) => `<li>${item.name}</li>`).join("")
+            : "<li>Nenhum item OK.</li>"
+        }
       </ul>
     </div>
 
     <div class="summary-block">
       <h3>Itens com problema</h3>
       <ul>
-        ${record.issueItems.length ? record.issueItems.map((item) => `<li>${item.name} - ${item.status}${item.observation ? ` (Obs: ${item.observation})` : ""}</li>`).join("") : "<li>Sem pendências.</li>"}
+        ${
+          record.issueItems?.length
+            ? record.issueItems
+                .map(
+                  (item) =>
+                    `<li>${item.name} - ${item.status}${item.observation ? ` (Obs: ${item.observation})` : ""}</li>`
+                )
+                .join("")
+            : "<li>Sem pendências.</li>"
+        }
       </ul>
     </div>
   `;
 
-  if (record.issueItems.some((item) => item.photo)) {
-    const photoBlock = document.createElement("div");
-    photoBlock.className = "summary-block";
-    photoBlock.innerHTML = "<h3>Fotos anexadas</h3>";
-
-    const grid = document.createElement("div");
-    grid.className = "photo-grid";
-
-    record.issueItems.forEach((item) => {
-      if (!item.photo) return;
-      const link = document.createElement("a");
-      link.href = item.photo;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      link.innerHTML = `<img class="photo-preview" src="${item.photo}" alt="Foto do item ${item.name}" />
-        <span>${item.name}</span>`;
-      grid.appendChild(link);
-    });
-
-    photoBlock.appendChild(grid);
-    modalBody.appendChild(photoBlock);
-  }
-
   modal.classList.remove("hidden");
+  modal.style.display = "flex";
+  document.body.style.overflow = "hidden";
 };
 
 const applyFilters = () => {
@@ -536,15 +616,13 @@ const applyFilters = () => {
   const endValue = filterEnd.value ? new Date(filterEnd.value) : null;
 
   const records = getStoredRecords().filter((record) => {
-    const matchesName = nameValue
-      ? normalizeText(record.name).includes(nameValue)
-      : true;
+    const matchesName = nameValue ? normalizeText(record.name).includes(nameValue) : true;
 
     const recordDate = new Date(record.dateISO);
-
     const matchesStart = startValue ? recordDate >= startValue : true;
+
     const matchesEnd = endValue
-      ? recordDate <= new Date(endValue.setHours(23, 59, 59, 999))
+      ? recordDate <= new Date(new Date(endValue).setHours(23, 59, 59, 999))
       : true;
 
     return matchesName && matchesStart && matchesEnd;
@@ -553,6 +631,9 @@ const applyFilters = () => {
   renderHistory(records);
 };
 
+// =====================================================
+// Fluxo do check-in
+// =====================================================
 const resetChecklistForm = () => {
   signatureInput.value = "";
   truthConfirm.checked = false;
@@ -561,27 +642,36 @@ const resetChecklistForm = () => {
 
 const handleStatusChange = (event) => {
   if (!event.target.classList.contains("status-select")) return;
-  updateChecklistFromInputs();
 
   const item = currentChecklist.find((entry) => entry.id === event.target.dataset.id);
-  const card = event.target.closest(".item");
-  const photoSection = card.querySelector(".item__photo");
+  if (!item) return;
 
-  if (item && (item.status === "Danificado" || item.status === "Não possuo")) {
-    photoSection.style.display = "flex";
-  } else {
-    photoSection.style.display = "none";
+  item.status = event.target.value;
+
+  // mostra/esconde foto no card
+  const card = event.target.closest(".item");
+  const photoSection = card?.querySelector(".item__photo");
+  if (photoSection) {
+    photoSection.style.display =
+      item.status === "Danificado" || item.status === "Não possuo" ? "flex" : "none";
   }
+
+  updateProgress();
 };
 
 const handleObservationChange = (event) => {
   if (!event.target.classList.contains("observation-input")) return;
-  updateChecklistFromInputs();
+
+  const item = currentChecklist.find((entry) => entry.id === event.target.dataset.id);
+  if (item) item.observation = event.target.value;
+
+  updateProgress();
 };
 
 const handlePhotoChange = async (event) => {
   if (!event.target.classList.contains("photo-input")) return;
-  const file = event.target.files[0];
+
+  const file = event.target.files?.[0];
   if (!file) return;
 
   const photoData = await readPhotoFile(file);
@@ -590,23 +680,21 @@ const handlePhotoChange = async (event) => {
   if (item) {
     item.photo = photoData;
     const preview = event.target.parentElement.querySelector(".photo-preview");
-    preview.src = photoData;
-    preview.style.display = "block";
+    if (preview) {
+      preview.src = photoData;
+      preview.style.display = "block";
+    }
   }
 };
 
 const handleFinish = () => {
-  updateChecklistFromInputs();
-
   const unanswered = currentChecklist.some((item) => !item.status);
   if (unanswered) {
     alert("Responda todos os itens do checklist antes de finalizar.");
     return;
   }
 
-  if (!updateSignatureValidation()) {
-    return;
-  }
+  if (!updateSignatureValidation()) return;
 
   const record = buildRecord();
   const records = getStoredRecords();
@@ -627,6 +715,23 @@ const startCheckin = () => {
     shift: workerShift.value,
     visitOperational: adminVisit.checked,
   };
+
+  if (!currentUser.name) {
+    alert("Informe o nome do trabalhador.");
+    return;
+  }
+  if (!currentUser.role) {
+    alert("Selecione a função.");
+    return;
+  }
+  if (!currentUser.sector) {
+    alert("Selecione o setor.");
+    return;
+  }
+  if (!currentUser.shift) {
+    alert("Selecione o turno.");
+    return;
+  }
 
   buildChecklist();
   workerSummary.textContent = `${currentUser.name} · ${currentUser.role} · ${currentUser.sector} · ${currentUser.shift}`;
@@ -650,7 +755,7 @@ const addDemoRecords = () => {
       dateLabel: new Date().toLocaleString("pt-BR"),
       signature: "Carlos Pereira",
       checklist: ROLE_EPI_MAP.Soldador.map((item, index) => ({
-        id: `soldador-${index}`,
+        id: `Soldador-${index}`,
         name: item,
         status: "OK",
         observation: "",
@@ -669,7 +774,7 @@ const addDemoRecords = () => {
       dateLabel: new Date(Date.now() - 86400000).toLocaleString("pt-BR"),
       signature: "Larissa Lima",
       checklist: ROLE_EPI_MAP.Manutenção.map((item, index) => ({
-        id: `manutencao-${index}`,
+        id: `Manutenção-${index}`,
         name: item,
         status: index === 2 ? "Danificado" : "OK",
         observation: index === 2 ? "Preciso substituir" : "",
@@ -680,9 +785,7 @@ const addDemoRecords = () => {
 
   demoRecords.forEach((record) => {
     record.okItems = record.checklist.filter((item) => item.status === "OK");
-    record.issueItems = record.checklist.filter(
-      (item) => item.status === "Não possuo" || item.status === "Danificado"
-    );
+    record.issueItems = record.checklist.filter((item) => item.status === "Não possuo" || item.status === "Danificado");
     record.statusGeneral = record.issueItems.length > 0 ? "PENDÊNCIA" : "OK";
   });
 
@@ -692,93 +795,15 @@ const addDemoRecords = () => {
   alert("Registros de demonstração adicionados ao histórico.");
 };
 
+// =====================================================
+// EVENTOS
+// =====================================================
 loginForm.addEventListener("submit", (event) => {
   event.preventDefault();
   startCheckin();
 });
 
-// Setores disponíveis por função (realista)
-const SECTORS_BY_ROLE = {
-  Soldador: ["Produção", "Manutenção", "Almoxarifado"],
-  Eletricista: ["Manutenção", "Produção", "Obra"],
-  Logística: [
-    "Recebimento",
-    "Armazenagem",
-    "Separação",
-    "Expedição",
-    "Transporte",
-    "Controle de Estoque",
-  ],
-  Manutenção: ["Manutenção", "Produção", "Obra"],
-  Produção: ["Produção"],
-  Obra: [
-    "Produção",
-    "Manutenção",
-    "Elétrica",
-    "Hidráulica",
-    "Logística de Obra",
-    "Almoxarifado",
-    "Administrativo de Obra",
-    "Segurança do Trabalho",
-  ],
-  Administrativo: ["Administrativo"],
-  Outro: [
-    "Produção",
-    "Manutenção",
-    "Logística",
-    "Almoxarifado",
-    "Administrativo",
-  ],
-};
-
-
-const DEFAULT_SECTORS = [
-  "Produção",
-  "Manutenção",
-  "Logística",
-  "Obra",
-  "Almoxarifado",
-  "Administrativo",
-  "Outro",
-];
-
-
-// atualiza o select de setor baseado na função
-const updateSectorByRole = () => {
-  const role = workerRole.value;
-
-  // regra do administrativo
-  adminVisitWrapper.style.display =
-    role === "Administrativo" ? "flex" : "none";
-  if (role !== "Administrativo") adminVisit.checked = false;
-
-  // limpa o select de setor
-  workerSector.innerHTML =
-    `<option value="" disabled selected>Selecione</option>`;
-
-  const sectors = SECTORS_BY_ROLE[role] || DEFAULT_SECTORS;
-
-  sectors.forEach((sector) => {
-    const opt = document.createElement("option");
-    opt.value = sector;
-    opt.textContent = sector;
-    workerSector.appendChild(opt);
-  });
-
-  // se só tiver 1 setor, seleciona automático
-  if (sectors.length === 1) {
-    workerSector.value = sectors[0];
-  }
-};
-
-// quando mudar a função
 workerRole.addEventListener("change", updateSectorByRole);
-
-// ao carregar a página
-updateSectorByRole();
-
-
-
 
 checklistContainer.addEventListener("change", handleStatusChange);
 checklistContainer.addEventListener("input", handleObservationChange);
@@ -789,13 +814,8 @@ truthConfirm.addEventListener("change", updateSignatureValidation);
 
 finishButton.addEventListener("click", handleFinish);
 
-newCheckinButton.addEventListener("click", () => {
-  showView("login");
-});
-
-changeRoleButton.addEventListener("click", () => {
-  showView("login");
-});
+newCheckinButton.addEventListener("click", () => showView("login"));
+changeRoleButton.addEventListener("click", () => showView("login"));
 
 demoButton.addEventListener("click", addDemoRecords);
 
@@ -803,9 +823,7 @@ applyFiltersButton.addEventListener("click", applyFilters);
 
 clearHistoryButton.addEventListener("click", () => {
   if (!confirm("Tem certeza que deseja limpar todo o histórico?")) return;
-  const confirmation = prompt(
-    "Digite LIMPAR para confirmar a exclusão definitiva do histórico."
-  );
+  const confirmation = prompt("Digite LIMPAR para confirmar a exclusão definitiva do histórico.");
   if (confirmation !== "LIMPAR") {
     alert("Confirmação incorreta. Histórico preservado.");
     return;
@@ -819,9 +837,7 @@ historyList.addEventListener("click", (event) => {
   if (!button) return;
 
   if (button.dataset.action === "details") {
-    const record = getStoredRecords().find(
-      (entry) => entry.id === button.dataset.id
-    );
+    const record = getStoredRecords().find((entry) => entry.id === button.dataset.id);
     if (record) {
       currentRecordForPrint = record;
       renderModalDetails(record);
@@ -829,77 +845,56 @@ historyList.addEventListener("click", (event) => {
   }
 });
 
-modalClose.addEventListener("click", () => {
-  modal.classList.add("hidden");
-});
-
-modal.addEventListener("click", (event) => {
-  if (event.target === modal) {
-    modal.classList.add("hidden");
-  }
-});
-
-printRecordButton.addEventListener("click", () => {
-  if (!currentRecordForPrint) return;
-  renderModalDetails(currentRecordForPrint);
-  window.print();
-});
-
-Array.from(document.querySelectorAll("[data-view]"))
-  .forEach((button) => {
-    button.addEventListener("click", () => {
-      const target = button.dataset.view;
-      showView(target === "history" ? "history" : "login");
-      if (target === "history") {
-        renderHistory(getStoredRecords());
-      }
-    });
-  });
-
-// Estado inicial.
-adminVisitWrapper.style.display = "none";
-renderHistory(getStoredRecords());
-showView("login");
-
-// ===== CONTROLE DEFINITIVO DO MODAL =====
-
-// garantir que o modal comece fechado
-if (modal) {
-  modal.style.display = "none";
-}
-
-// botão FECHAR
+// Modal: fechar
 if (modalClose) {
   modalClose.addEventListener("click", () => {
+    modal.classList.add("hidden");
     modal.style.display = "none";
     document.body.style.overflow = "auto";
   });
 }
 
-// fechar clicando fora do modal
+// Modal: clicar fora
 if (modal) {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) {
+      modal.classList.add("hidden");
       modal.style.display = "none";
       document.body.style.overflow = "auto";
     }
   });
 }
 
-// botão IMPRIMIR / EXPORTAR
+// Modal: imprimir
 if (printRecordButton) {
   printRecordButton.addEventListener("click", () => {
     window.print();
   });
 }
 
-// tecla ESC fecha o modal
+// ESC fecha modal
 document.addEventListener("keydown", (e) => {
   if (e.key === "Escape" && modal && modal.style.display === "flex") {
+    modal.classList.add("hidden");
     modal.style.display = "none";
     document.body.style.overflow = "auto";
   }
 });
 
+// Botões de navegação (data-view)
+Array.from(document.querySelectorAll("[data-view]")).forEach((button) => {
+  button.addEventListener("click", () => {
+    const target = button.dataset.view;
+    showView(target === "history" ? "history" : "login");
+    if (target === "history") renderHistory(getStoredRecords());
+  });
+});
 
+// =====================================================
+// ESTADO INICIAL
+// =====================================================
+adminVisitWrapper.style.display = "none";
+renderHistory(getStoredRecords());
+showView("login");
+updateSectorByRole();
 
