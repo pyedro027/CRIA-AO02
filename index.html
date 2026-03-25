@@ -1,173 +1,1129 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Check-in de EPI</title>
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SST Manager — Segurança do Trabalho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f1117;
+  --bg2: #161820;
+  --bg3: #1e2030;
+  --bg4: #252840;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --text2: #9196a8;
+  --text3: #5a6070;
+  --accent: #4f8ef7;
+  --accent2: #3a6fd4;
+  --green: #3ecf8e;
+  --green2: #1a7a50;
+  --green-bg: rgba(62,207,142,0.1);
+  --red: #f06060;
+  --red2: #a03030;
+  --red-bg: rgba(240,96,96,0.1);
+  --yellow: #f5c842;
+  --yellow-bg: rgba(245,200,66,0.1);
+  --blue-bg: rgba(79,142,247,0.1);
+  --radius: 10px;
+  --radius2: 14px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+/* LAYOUT */
+.layout { display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.topbar { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg2); flex-shrink: 0; }
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* SIDEBAR */
+.brand { padding: 20px 16px 14px; border-bottom: 1px solid var(--border); }
+.brand-name { font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: -.3px; }
+.brand-sub { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: var(--mono); }
+.nav-section { font-size: 10px; color: var(--text3); padding: 14px 16px 4px; text-transform: uppercase; letter-spacing: .08em; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; font-size: 13px; cursor: pointer; color: var(--text2); border-left: 2px solid transparent; transition: all .15s; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--blue-bg); color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+.nav-icon { width: 15px; height: 15px; flex-shrink: 0; opacity: .7; }
+.nav-item.active .nav-icon { opacity: 1; }
+.sidebar-footer { margin-top: auto; padding: 12px 16px; border-top: 1px solid var(--border); }
+.empresa-badge { background: var(--bg3); border-radius: var(--radius); padding: 8px 10px; }
+.empresa-name { font-size: 12px; font-weight: 500; color: var(--text); }
+.empresa-cnpj { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+/* TOPBAR */
+.page-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.page-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; }
+select.topbar-select { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); padding: 6px 10px; border-radius: var(--radius); font-size: 12px; font-family: var(--font); cursor: pointer; }
+.btn { padding: 7px 14px; border-radius: var(--radius); font-size: 12px; cursor: pointer; font-family: var(--font); font-weight: 500; transition: all .15s; border: 1px solid var(--border2); background: var(--bg3); color: var(--text); }
+.btn:hover { background: var(--bg4); }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent2); }
+.btn-danger { background: var(--red-bg); border-color: var(--red2); color: var(--red); }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* SCREENS */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* METRICS */
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 16px; }
+.metric-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+.metric-value { font-size: 28px; font-weight: 600; line-height: 1; font-family: var(--mono); }
+.metric-value.danger { color: var(--red); }
+.metric-value.warning { color: var(--yellow); }
+.metric-value.success { color: var(--green); }
+.metric-value.info { color: var(--accent); }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+/* CARDS */
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 16px; }
+.card-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 14px; }
+
+/* ALERT */
+.alert { border-radius: var(--radius); padding: 10px 14px; font-size: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.alert-warning { background: var(--yellow-bg); border: 1px solid rgba(245,200,66,0.25); color: var(--yellow); }
+.alert-danger { background: var(--red-bg); border: 1px solid rgba(240,96,96,0.25); color: var(--red); }
+.alert-success { background: var(--green-bg); border: 1px solid rgba(62,207,142,0.25); color: var(--green); }
+
+/* BADGES */
+.badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+.badge-green { background: var(--green-bg); color: var(--green); }
+.badge-blue { background: var(--blue-bg); color: var(--accent); }
+.badge-gray { background: var(--bg3); color: var(--text2); }
+
+/* BARS */
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.bar-label { font-size: 12px; color: var(--text2); width: 110px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { flex: 1; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 3px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+.bar-val { font-size: 12px; color: var(--text2); width: 30px; text-align: right; font-family: var(--mono); flex-shrink: 0; }
+
+/* SECTOR ROWS */
+.row-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.row-item:last-child { border-bottom: none; }
+.row-name { font-size: 13px; color: var(--text); }
+.row-sub { font-size: 11px; color: var(--text3); margin-top: 1px; }
+
+/* MINI CHART */
+.mini-chart { display: flex; align-items: flex-end; gap: 5px; height: 64px; margin-bottom: 8px; }
+.mini-bar { flex: 1; border-radius: 3px 3px 0 0; min-width: 16px; transition: height .4s; cursor: pointer; position: relative; }
+.mini-bar:hover { opacity: .8; }
+.chart-labels { display: flex; justify-content: space-between; }
+.chart-label { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+/* TABLE */
+.table-wrap { overflow-x: auto; border-radius: var(--radius2); border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; padding: 10px 14px; font-weight: 500; color: var(--text3); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid var(--border); background: var(--bg2); white-space: nowrap; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: var(--text); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg3); }
+.table-empty { padding: 32px; text-align: center; color: var(--text3); font-size: 13px; }
+
+/* FORM */
+.form-section { margin-bottom: 20px; }
+.form-section-title { font-size: 12px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group.full { grid-column: 1 / -1; }
+label { font-size: 11px; color: var(--text2); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+input, select, textarea { background: var(--bg3); border: 1px solid var(--border2); color: var(--text); padding: 8px 12px; border-radius: var(--radius); font-size: 13px; font-family: var(--font); width: 100%; transition: border-color .15s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+textarea { resize: vertical; min-height: 80px; }
+select option { background: var(--bg2); }
+.form-footer { display: flex; gap: 8px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid var(--border); margin-top: 4px; }
+input[type="checkbox"] { width: auto; accent-color: var(--accent); }
+.checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+
+/* QUADROS */
+.quadro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.quadro-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius2); padding: 16px; transition: border-color .2s; }
+.quadro-card:hover { border-color: var(--border2); }
+.quadro-num { font-size: 10px; font-weight: 600; color: var(--accent); font-family: var(--mono); letter-spacing: .08em; margin-bottom: 6px; }
+.quadro-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.quadro-desc { font-size: 12px; color: var(--text3); margin-bottom: 12px; }
+.quadro-footer { display: flex; align-items: center; justify-content: space-between; }
+
+/* QUADRO TABLE */
+.qview { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.7); align-items: center; justify-content: center; }
+.qview.open { display: flex; }
+.qview-box { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius2); width: 90%; max-width: 900px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+.qview-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+.qview-title { font-size: 14px; font-weight: 500; }
+.qview-body { overflow-y: auto; padding: 20px; }
+.close-btn { background: none; border: none; color: var(--text2); font-size: 20px; cursor: pointer; padding: 2px 6px; }
+.close-btn:hover { color: var(--text); }
+
+/* CAT */
+.cat-preview { background: var(--bg); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px; font-family: var(--mono); font-size: 11px; color: var(--text2); margin-top: 12px; line-height: 2; }
+.cat-field { display: flex; gap: 8px; margin-bottom: 4px; }
+.cat-key { color: var(--text3); min-width: 180px; }
+.cat-val { color: var(--text); }
+
+/* SECTION HEADER */
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.section-title { font-size: 15px; font-weight: 500; }
+
+/* RISK DOT */
+.risk-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; flex-shrink: 0; }
+
+/* TOOLTIP */
+.tooltip-val { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--bg4); border: 1px solid var(--border2); border-radius: 6px; padding: 3px 7px; font-size: 11px; white-space: nowrap; pointer-events: none; display: none; font-family: var(--mono); }
+.mini-bar:hover .tooltip-val { display: block; }
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar__content">
-      <h1>Check-in de EPI</h1>
-      <nav class="topbar__nav" aria-label="Navegação principal">
-        <button class="btn btn--ghost" type="button" data-view="checkin">Check-in</button>
-        <button class="btn btn--ghost" type="button" data-view="history">Histórico</button>
-      </nav>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-name">SST Manager</div>
+      <div class="brand-sub">v1.0 · NR-4 / NR-15</div>
     </div>
-  </header>
 
-  <main class="container">
-    <section id="view-login" class="view">
-      <div class="card">
-        <h2>Iniciar check-in</h2>
-        <p class="helper">Preencha os dados do trabalhador para gerar a lista de EPIs.</p>
-        <form id="login-form">
-          <div class="grid">
-            <label class="field">
-              <span>Nome do trabalhador</span>
-              <input type="text" id="worker-name" required placeholder="Ex: Ana Beatriz Souza" />
-            </label>
-            <label class="field">
-              <span>Matrícula/ID (opcional)</span>
-              <input type="text" id="worker-id" placeholder="Ex: 2045" />
-            </label>
-            <label class="field">
-              <span>Função</span>
-              <select id="worker-role" required>
-  <option value="" disabled selected>Selecione</option>
-  <option value="Obra">Obra</option>
-  <option value="Logística">Logística</option>
-</select>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="nav('dashboard',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor" opacity=".5"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="nav('ocorrencias',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M8 2L9.6 6H14L10.7 8.5L12 13L8 10.3L4 13L5.3 8.5L2 6H6.4L8 2Z" fill="currentColor"/></svg>
+      Ocorrências
+    </div>
+    <div class="nav-item" onclick="nav('nova',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v6M5 8h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Registrar
+    </div>
 
-            </label>
-            <label class="field">
-              <span>Setor</span>
-             <select id="worker-sector" required>
-  <option value="" disabled selected>Selecione</option>
-</select>
+    <div class="nav-section">Relatórios</div>
+    <div class="nav-item" onclick="nav('quadros',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M1 6h14M6 6v9" stroke="currentColor" stroke-width="1"/></svg>
+      Quadros NR-4
+    </div>
+    <div class="nav-item" onclick="nav('trabalhadores',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><circle cx="6" cy="5" r="2.5" stroke="currentColor" stroke-width="1.5"/><path d="M1 14c0-2.8 2.2-5 5-5s5 2.2 5 5" stroke="currentColor" stroke-width="1.5"/><path d="M12 7v4M14 9h-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      Trabalhadores
+    </div>
+    <div class="nav-item" onclick="nav('cat',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Gerar CAT
+    </div>
+    <div class="nav-item" onclick="nav('insalubridade',this)">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M8 1v8M8 14a5 5 0 100-10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="12" r="2" fill="currentColor" opacity=".5"/></svg>
+      Insalubridade
+    </div>
 
-            </label>
-            <label class="field">
-              <span>Turno</span>
-              <select id="worker-shift" required>
-                <option value="" disabled selected>Selecione</option>
-                <option value="Manhã">Manhã</option>
-                <option value="Tarde">Tarde</option>
-                <option value="Noite">Noite</option>
-              </select>
-            </label>
-          </div>
-
-          <label class="field checkbox" id="admin-visit-wrapper">
-            <input type="checkbox" id="admin-visit" />
-            <span>Visita à área operacional (libera checklist básico)</span>
-          </label>
-
-          <div class="actions">
-            <button class="btn" type="submit">Iniciar check-in</button>
-            <button class="btn btn--ghost" type="button" id="demo-button">Demo</button>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <section id="view-checklist" class="view hidden">
-      <div class="card">
-        <div class="card__header">
-          <div>
-            <h2>Checklist de EPI</h2>
-            <p id="worker-summary" class="helper"></p>
-          </div>
-          <button class="btn btn--ghost" type="button" id="change-role">Trocar função</button>
-        </div>
-
-        <div class="progress">
-          <span id="progress-text">Respondidos: 0/0</span>
-          <div class="progress__bar">
-            <div class="progress__fill" id="progress-fill"></div>
-          </div>
-        </div>
-
-        <div id="safety-alert" class="alert hidden">
-          ⚠️ Procure o responsável de SST antes de iniciar a atividade.
-        </div>
-
-        <div id="checklist-container" class="checklist"></div>
-
-        <div id="signature-section" class="signature">
-          <h3>Assinatura e confirmação</h3>
-          <label class="field">
-            <span>Assinatura (nome completo)</span>
-            <input type="text" id="signature-input" placeholder="Digite seu nome completo" />
-          </label>
-          <label class="field checkbox">
-            <input type="checkbox" id="truth-confirm" />
-            <span>Confirmo que estou usando os EPIs marcados como OK e informei a verdade.</span>
-          </label>
-          <p class="helper" id="signature-helper"></p>
-        </div>
-
-        <div class="actions">
-          <button class="btn" type="button" id="finish-checkin">Finalizar check-in</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-summary" class="view hidden">
-      <div class="card">
-        <h2>Resumo do check-in</h2>
-        <div id="summary-content"></div>
-        <div class="actions">
-          <button class="btn" type="button" id="new-checkin">Novo check-in</button>
-          <button class="btn btn--ghost" type="button" data-view="history">Ir para histórico</button>
-        </div>
-      </div>
-    </section>
-
-    <section id="view-history" class="view hidden">
-      <div class="card">
-        <div class="card__header">
-          <div>
-            <h2>Histórico</h2>
-            <p class="helper">Consulte check-ins anteriores salvos localmente.</p>
-          </div>
-          <button class="btn btn--ghost" type="button" id="clear-history">Limpar histórico</button>
-        </div>
-
-        <div class="filters">
-          <label class="field">
-            <span>Filtrar por nome</span>
-            <input type="text" id="filter-name" placeholder="Digite o nome" />
-          </label>
-          <label class="field">
-            <span>Data inicial</span>
-            <input type="date" id="filter-start" />
-          </label>
-          <label class="field">
-            <span>Data final</span>
-            <input type="date" id="filter-end" />
-          </label>
-          <button class="btn" type="button" id="apply-filters">Aplicar filtros</button>
-        </div>
-
-        <div id="history-list" class="history"></div>
-      </div>
-    </section>
-  </main>
-
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
-    <div class="modal__content">
-      <button class="modal__close" type="button" id="modal-close">Fechar</button>
-      <div id="modal-body"></div>
-      <div class="actions modal__actions">
-        <button class="btn" type="button" id="print-record">Imprimir/Exportar</button>
+    <div class="sidebar-footer">
+      <div class="empresa-badge">
+        <div class="empresa-name" id="sidebar-empresa">Logística Veloz Ltda.</div>
+        <div class="empresa-cnpj" id="sidebar-cnpj">12.345.678/0001-90</div>
       </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <div class="page-title" id="page-title">Dashboard</div>
+        <div class="page-sub" id="page-sub">Visão geral · 2025</div>
+      </div>
+      <div class="topbar-right">
+        <select class="topbar-select" onchange="setPeriodo(this.value)" id="periodo-select">
+          <option value="2025">2025</option>
+          <option value="2024">2024</option>
+        </select>
+        <button class="btn btn-primary" onclick="nav('nova', document.querySelector('.nav-item:nth-child(5)'))">+ Registrar ocorrência</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="screen active" id="screen-dashboard">
+        <div id="dash-alerts"></div>
+        <div class="metrics" id="dash-metrics"></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-title">Acidentes por mês</div>
+            <div class="mini-chart" id="monthly-chart"></div>
+            <div class="chart-labels" id="chart-labels"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Ocorrências por setor</div>
+            <div id="setor-bars"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Taxa de frequência por setor</div>
+            <div id="freq-bars"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Alertas e vencimentos</div>
+            <div id="dash-alertas-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OCORRÊNCIAS -->
+      <div class="screen" id="screen-ocorrencias">
+        <div class="section-header">
+          <div class="section-title">Histórico de ocorrências</div>
+          <div style="display:flex;gap:8px">
+            <select class="topbar-select" id="filter-tipo" onchange="renderOcorrencias()"><option value="">Todos os tipos</option><option>Acidente c/ vítima</option><option>Acidente s/ vítima</option><option>Doença ocupacional</option><option>Quase-acidente</option></select>
+            <select class="topbar-select" id="filter-setor" onchange="renderOcorrencias()"><option value="">Todos os setores</option></select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Data</th><th>Tipo</th><th>Trabalhador</th><th>Setor</th><th>Afastamento</th><th>CAT</th><th>Perda R$</th><th></th></tr></thead>
+            <tbody id="ocorrencias-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- REGISTRAR -->
+      <div class="screen" id="screen-nova">
+        <div class="section-header"><div class="section-title">Registrar nova ocorrência</div></div>
+        <div style="max-width:600px">
+          <div class="form-section">
+            <div class="form-section-title">Dados da ocorrência</div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Tipo</label>
+                <select id="f-tipo" onchange="toggleTipoFields()">
+                  <option>Acidente c/ vítima</option>
+                  <option>Acidente s/ vítima</option>
+                  <option>Doença ocupacional</option>
+                  <option>Quase-acidente</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Data</label>
+                <input type="date" id="f-data">
+              </div>
+              <div class="form-group" id="field-trabalhador">
+                <label>Trabalhador</label>
+                <select id="f-trabalhador"><option value="">— sem vítima —</option></select>
+              </div>
+              <div class="form-group">
+                <label>Setor</label>
+                <select id="f-setor"></select>
+              </div>
+              <div class="form-group" id="field-afastamento">
+                <label>Afastamento</label>
+                <select id="f-afastamento">
+                  <option value="0">Sem afastamento</option>
+                  <option value="1">Sim — menos de 15 dias</option>
+                  <option value="2">Sim — mais de 15 dias</option>
+                </select>
+              </div>
+              <div class="form-group" id="field-dias">
+                <label>Dias de afastamento</label>
+                <input type="number" id="f-dias" min="0" placeholder="0">
+              </div>
+              <div class="form-group" id="field-cid">
+                <label>CID-10 (doença)</label>
+                <input type="text" id="f-cid" placeholder="ex: M65, H83.3">
+              </div>
+              <div class="form-group" id="field-perda">
+                <label>Perda material (R$)</label>
+                <input type="number" id="f-perda" min="0" placeholder="0">
+              </div>
+              <div class="form-group full">
+                <label>Descrição</label>
+                <textarea id="f-descricao" placeholder="Descreva o que aconteceu, local, causa aparente, medidas tomadas..."></textarea>
+              </div>
+              <div class="form-group" id="field-obito" style="display:none">
+                <label>&nbsp;</label>
+                <label class="checkbox-row"><input type="checkbox" id="f-obito"> Houve óbito</label>
+              </div>
+            </div>
+          </div>
+          <div class="alert alert-warning" id="cat-aviso" style="display:none">
+            ⚠ Este tipo de ocorrência exige emissão de CAT até o 1.º dia útil seguinte (art. 22, Lei 8.212/91).
+          </div>
+          <div class="form-footer">
+            <button class="btn" onclick="nav('ocorrencias',null)">Cancelar</button>
+            <button class="btn btn-primary" onclick="salvarOcorrencia()">Salvar ocorrência</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUADROS NR-4 -->
+      <div class="screen" id="screen-quadros">
+        <div style="margin-bottom:16px;font-size:13px;color:var(--text3)">Gerados automaticamente com base nas ocorrências registradas. Clique em "Visualizar" para ver o quadro completo.</div>
+        <div class="quadro-grid" id="quadros-grid"></div>
+      </div>
+
+      <!-- TRABALHADORES -->
+      <div class="screen" id="screen-trabalhadores">
+        <div class="section-header">
+          <div class="section-title">Cadastro de trabalhadores</div>
+          <button class="btn btn-primary" onclick="showAddTrabalhador()">+ Adicionar</button>
+        </div>
+        <div id="add-trab-form" style="display:none;margin-bottom:20px;max-width:560px">
+          <div class="card">
+            <div class="card-title">Novo trabalhador</div>
+            <div class="form-grid">
+              <div class="form-group"><label>Nome</label><input id="nt-nome" placeholder="Nome completo"></div>
+              <div class="form-group"><label>Função</label><input id="nt-funcao" placeholder="ex: Motorista"></div>
+              <div class="form-group"><label>Setor</label><select id="nt-setor"></select></div>
+              <div class="form-group"><label>Data admissão</label><input type="date" id="nt-admissao"></div>
+              <div class="form-group"><label>Venc. ASO</label><input type="date" id="nt-aso"></div>
+              <div class="form-group"><label>CPF</label><input id="nt-cpf" placeholder="000.000.000-00"></div>
+            </div>
+            <div class="form-footer">
+              <button class="btn" onclick="document.getElementById('add-trab-form').style.display='none'">Cancelar</button>
+              <button class="btn btn-primary" onclick="salvarTrabalhador()">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>Função</th><th>Setor</th><th>Admissão</th><th>ASO</th><th>Ocorrências</th><th></th></tr></thead>
+            <tbody id="trabalhadores-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CAT -->
+      <div class="screen" id="screen-cat">
+        <div style="max-width:600px">
+          <div class="form-section">
+            <div class="form-section-title">Gerar CAT — Comunicação de Acidente de Trabalho</div>
+            <div class="alert alert-warning">⚠ Prazo legal: até o 1.º dia útil após o acidente (art. 22, Lei 8.212/91). Óbito: imediatamente.</div>
+            <div class="form-grid" style="margin-top:14px">
+              <div class="form-group full">
+                <label>Vincular a ocorrência registrada</label>
+                <select id="cat-ocorrencia" onchange="previewCAT()"><option value="">— selecione —</option></select>
+              </div>
+              <div class="form-group"><label>Tipo de CAT</label>
+                <select id="cat-tipo"><option>Inicial</option><option>Reabertura</option><option>Óbito</option></select>
+              </div>
+              <div class="form-group"><label>CRM do médico assistente</label><input id="cat-crm" placeholder="ex: CRM/ES 00000"></div>
+            </div>
+          </div>
+          <div id="cat-preview-area"></div>
+          <div class="form-footer">
+            <button class="btn btn-primary" onclick="gerarCAT()">Gerar CAT (imprimir)</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INSALUBRIDADE -->
+      <div class="screen" id="screen-insalubridade">
+        <div class="section-header">
+          <div class="section-title">Quadro V — Insalubridade (NR-15)</div>
+          <button class="btn btn-primary" onclick="showAddAgente()">+ Adicionar agente</button>
+        </div>
+        <div id="add-agente-form" style="display:none;margin-bottom:20px;max-width:560px">
+          <div class="card">
+            <div class="card-title">Novo agente insalubre</div>
+            <div class="form-grid">
+              <div class="form-group"><label>Setor</label><select id="ag-setor"></select></div>
+              <div class="form-group"><label>Tipo de agente</label>
+                <select id="ag-tipo"><option>Físico</option><option>Químico</option><option>Biológico</option></select>
+              </div>
+              <div class="form-group full"><label>Agente identificado</label><input id="ag-nome" placeholder="ex: Ruído contínuo, Benzeno, Bactérias..."></div>
+              <div class="form-group"><label>Intensidade/Concentração</label><input id="ag-intensidade" placeholder="ex: 87 dB(A), 5 mg/m³"></div>
+              <div class="form-group"><label>Grau (NR-15)</label>
+                <select id="ag-grau"><option>Mínimo (10%)</option><option>Médio (20%)</option><option>Máximo (40%)</option></select>
+              </div>
+              <div class="form-group"><label>N.º trabalhadores expostos</label><input type="number" id="ag-expostos" min="1" placeholder="0"></div>
+            </div>
+            <div class="form-footer">
+              <button class="btn" onclick="document.getElementById('add-agente-form').style.display='none'">Cancelar</button>
+              <button class="btn btn-primary" onclick="salvarAgente()">Salvar</button>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Setor</th><th>Tipo</th><th>Agente</th><th>Intensidade</th><th>Grau</th><th>Expostos</th><th></th></tr></thead>
+            <tbody id="agentes-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL QUADRO -->
+<div class="qview" id="qview">
+  <div class="qview-box">
+    <div class="qview-header">
+      <div class="qview-title" id="qview-title">Quadro III</div>
+      <button class="close-btn" onclick="closeQview()">×</button>
+    </div>
+    <div class="qview-body" id="qview-body"></div>
+  </div>
+</div>
+
+<!-- MODAL TOAST -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:var(--bg4);border:1px solid var(--border2);border-radius:var(--radius);padding:10px 16px;font-size:13px;color:var(--text);z-index:999;display:none;transition:opacity .3s"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const STORAGE_KEY = 'sst_data_v2';
+
+function loadData() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || defaultData(); }
+  catch(e) { return defaultData(); }
+}
+
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function defaultData() {
+  return {
+    empresa: { nome: 'Logística Veloz Ltda.', cnpj: '12.345.678/0001-90', cnae: '49.30-2-02', grauRisco: 3, hht: 168000 },
+    setores: ['Carga / Descarga','Transporte','Op. de Empilhadeira','Pátio / Manobra','Administrativo'],
+    trabalhadores: [
+      { id:1, nome:'Pedro Alves', funcao:'Aux. de carga', setor:'Carga / Descarga', admissao:'2022-03-12', aso:'2025-08-10', cpf:'111.111.111-11' },
+      { id:2, nome:'Marcos Lima', funcao:'Motorista', setor:'Transporte', admissao:'2021-08-05', aso:'2025-07-01', cpf:'222.222.222-22' },
+      { id:3, nome:'Ana Costa', funcao:'Aux. de carga', setor:'Carga / Descarga', admissao:'2023-01-20', aso:'2026-01-20', cpf:'333.333.333-33' },
+      { id:4, nome:'Carlos Souza', funcao:'Op. de empilhadeira', setor:'Op. de Empilhadeira', admissao:'2020-06-10', aso:'2025-09-15', cpf:'444.444.444-44' },
+      { id:5, nome:'Lucas Ferreira', funcao:'Motorista', setor:'Transporte', admissao:'2022-11-15', aso:'2026-03-01', cpf:'555.555.555-55' },
+    ],
+    ocorrencias: [
+      { id:1, tipo:'Acidente c/ vítima', data:'2025-06-12', trabalhadorId:1, setor:'Carga / Descarga', afastamento:1, dias:8, perda:0, descricao:'Trabalhador escorregou na rampa molhada e torceu o tornozelo direito.', obito:false, cid:'' },
+      { id:2, tipo:'Acidente s/ vítima', data:'2025-06-05', trabalhadorId:null, setor:'Op. de Empilhadeira', afastamento:0, dias:0, perda:2400, descricao:'Empilhadeira colidiu com estrutura de prateleira. Sem lesionados.', obito:false, cid:'' },
+      { id:3, tipo:'Doença ocupacional', data:'2025-05-28', trabalhadorId:2, setor:'Transporte', afastamento:2, dias:22, perda:0, descricao:'Lombalgia crônica por postura inadequada na direção. CID M54.5.', obito:false, cid:'M54.5' },
+      { id:4, tipo:'Quase-acidente', data:'2025-05-20', trabalhadorId:null, setor:'Carga / Descarga', afastamento:0, dias:0, perda:0, descricao:'Carga quase caiu sobre trabalhador durante manobra. Risco real de lesão grave.', obito:false, cid:'' },
+      { id:5, tipo:'Acidente c/ vítima', data:'2025-04-14', trabalhadorId:3, setor:'Carga / Descarga', afastamento:1, dias:5, perda:0, descricao:'Corte no antebraço por quina de caixa de metal.', obito:false, cid:'' },
+      { id:6, tipo:'Acidente s/ vítima', data:'2025-03-03', trabalhadorId:null, setor:'Pátio / Manobra', afastamento:0, dias:0, perda:1200, descricao:'Veículo bateu em pilar do galpão durante manobra. Sem vítimas.', obito:false, cid:'' },
+    ],
+    agentes: [
+      { id:1, setor:'Carga / Descarga', tipo:'Físico', nome:'Ruído de veículos e equipamentos', intensidade:'87 dB(A) — acima do LT (NR-15, Anexo I)', grau:'Médio (20%)', expostos:22 },
+      { id:2, setor:'Op. de Empilhadeira', tipo:'Físico', nome:'Vibração de corpo inteiro', intensidade:'Acima do limite de conforto (NR-15, Anexo VIII)', grau:'Mínimo (10%)', expostos:8 },
+      { id:3, setor:'Pátio / Manobra', tipo:'Físico', nome:'Calor — galpão sem ventilação adequada', intensidade:'IBUTG = 27,5 °C (NR-15, Anexo III)', grau:'Médio (20%)', expostos:18 },
+    ],
+    periodo: '2025',
+    nextId: 10
+  };
+}
+
+let state = loadData();
+let periodoAtivo = state.periodo || '2025';
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const pageInfo = {
+  dashboard: ['Dashboard','Visão geral · ' + periodoAtivo],
+  ocorrencias: ['Ocorrências','Histórico de acidentes e incidentes'],
+  nova: ['Registrar ocorrência','Preencha os dados do evento'],
+  quadros: ['Quadros NR-4','Gerados automaticamente com base nas ocorrências'],
+  trabalhadores: ['Trabalhadores','Cadastro e controle de ASOs'],
+  cat: ['Gerar CAT','Comunicação de Acidente de Trabalho'],
+  insalubridade: ['Insalubridade','Quadro V — Agentes insalubres por setor']
+};
+
+function nav(id, el) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  const info = pageInfo[id] || [id, ''];
+  document.getElementById('page-title').textContent = info[0];
+  document.getElementById('page-sub').textContent = info[1];
+  if (el) el.classList.add('active');
+  renderScreen(id);
+}
+
+function renderScreen(id) {
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'ocorrencias') renderOcorrencias();
+  if (id === 'nova') initNova();
+  if (id === 'quadros') renderQuadros();
+  if (id === 'trabalhadores') renderTrabalhadores();
+  if (id === 'cat') initCAT();
+  if (id === 'insalubridade') renderInsalubridade();
+}
+
+function setPeriodo(v) {
+  periodoAtivo = v;
+  state.periodo = v;
+  saveData();
+  pageInfo.dashboard[1] = 'Visão geral · ' + v;
+  renderDashboard();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function ocorrenciasPeriodo() {
+  return state.ocorrencias.filter(o => o.data.startsWith(periodoAtivo));
+}
+
+function getTrabalhador(id) {
+  return state.trabalhadores.find(t => t.id === id) || null;
+}
+
+function formatDate(d) {
+  if (!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function getMes(data) { return parseInt(data.split('-')[1]) || 0; }
+
+function toast(msg, type='success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.opacity = '1';
+  el.style.borderColor = type === 'success' ? 'var(--green2)' : 'var(--red2)';
+  setTimeout(() => { el.style.opacity = '0'; setTimeout(() => el.style.display = 'none', 300); }, 2500);
+}
+
+function diasParaVencer(dateStr) {
+  if (!dateStr) return 999;
+  const d = new Date(dateStr);
+  const hoje = new Date();
+  return Math.ceil((d - hoje) / 86400000);
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const ocs = ocorrenciasPeriodo();
+  const comVitima = ocs.filter(o => o.tipo === 'Acidente c/ vítima');
+  const semVitima = ocs.filter(o => o.tipo === 'Acidente s/ vítima');
+  const doencas = ocs.filter(o => o.tipo === 'Doença ocupacional');
+  const diasPerdidos = ocs.reduce((s,o) => s + (o.dias || 0), 0);
+  const hht = state.empresa.hht;
+  const tf = hht > 0 ? ((comVitima.length / hht) * 1000000).toFixed(1) : 0;
+  const ig = hht > 0 ? ((diasPerdidos / hht) * 1000000).toFixed(0) : 0;
+  const relacao = comVitima.length > 0 ? (semVitima.length / comVitima.length).toFixed(1) : '—';
+
+  // Alerts
+  const alertDiv = document.getElementById('dash-alerts');
+  let alerts = '';
+  if (comVitima.length > 0 && semVitima.length > 0) {
+    const r = semVitima.length / comVitima.length;
+    if (r >= 2) alerts += `<div class="alert alert-danger">⚠ Alerta crítico: relação S/V ÷ C/V = ${r.toFixed(1)} — ambiente com risco elevado. Revisão do PGR recomendada.</div>`;
+    else if (r >= 1.5) alerts += `<div class="alert alert-warning">⚠ Atenção: relação acidentes s/ vítima / c/ vítima = ${r.toFixed(1)}. Monitoramento intensificado recomendado.</div>`;
+  }
+  // ASO vencendo
+  state.trabalhadores.forEach(t => {
+    const d = diasParaVencer(t.aso);
+    if (d <= 15 && d >= 0) alerts += `<div class="alert alert-warning">⚠ ASO de <strong>${t.nome}</strong> vence em ${d} dia(s).</div>`;
+  });
+  alertDiv.innerHTML = alerts;
+
+  // Metrics
+  document.getElementById('dash-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">Acid. c/ vítima</div><div class="metric-value ${comVitima.length > 3 ? 'danger' : comVitima.length > 0 ? 'warning' : 'success'}">${comVitima.length}</div><div class="metric-sub">no período</div></div>
+    <div class="metric-card"><div class="metric-label">Acid. s/ vítima</div><div class="metric-value ${semVitima.length > 5 ? 'warning' : ''}">${semVitima.length}</div><div class="metric-sub">relação: ${relacao}</div></div>
+    <div class="metric-card"><div class="metric-label">Doenças ocupac.</div><div class="metric-value ${doencas.length > 3 ? 'warning' : ''}">${doencas.length}</div><div class="metric-sub">registradas</div></div>
+    <div class="metric-card"><div class="metric-label">Taxa de frequência</div><div class="metric-value info">${tf}</div><div class="metric-sub">Índice grav.: ${ig}</div></div>
+  `;
+
+  // Monthly chart
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const monthly = Array(12).fill(0);
+  ocs.filter(o => o.tipo === 'Acidente c/ vítima' || o.tipo === 'Acidente s/ vítima').forEach(o => { const m = getMes(o.data); if(m>0) monthly[m-1]++; });
+  const maxM = Math.max(...monthly, 1);
+  const chartEl = document.getElementById('monthly-chart');
+  const labelsEl = document.getElementById('chart-labels');
+  chartEl.innerHTML = '';
+  labelsEl.innerHTML = '';
+  monthly.forEach((v, i) => {
+    const b = document.createElement('div');
+    b.className = 'mini-bar';
+    const pct = Math.max((v/maxM)*100, 4);
+    b.style.cssText = `height:${pct}%;background:${v>2?'#f06060':v>0?'#f5c842':'#3ecf8e'};`;
+    b.innerHTML = `<div class="tooltip-val">${meses[i]}: ${v}</div>`;
+    chartEl.appendChild(b);
+    const l = document.createElement('span');
+    l.className = 'chart-label';
+    l.textContent = meses[i].substring(0,3);
+    labelsEl.appendChild(l);
+  });
+
+  // Setor bars
+  const setorCount = {};
+  state.setores.forEach(s => setorCount[s] = 0);
+  ocs.forEach(o => { if(o.setor) setorCount[o.setor] = (setorCount[o.setor]||0)+1; });
+  const maxS = Math.max(...Object.values(setorCount), 1);
+  const colors = { alto: '#f06060', medio: '#f5c842', baixo: '#3ecf8e' };
+  let setorHTML = '';
+  Object.entries(setorCount).sort((a,b)=>b[1]-a[1]).forEach(([s,v]) => {
+    const c = v > 3 ? colors.alto : v > 1 ? colors.medio : colors.baixo;
+    setorHTML += `<div class="bar-row"><div class="bar-label" title="${s}">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxS*100).toFixed(0)}%;background:${c}"></div></div><div class="bar-val">${v}</div></div>`;
+  });
+  document.getElementById('setor-bars').innerHTML = setorHTML || '<div style="color:var(--text3);font-size:13px">Nenhuma ocorrência no período.</div>';
+
+  // Freq bars
+  const setorCV = {};
+  state.setores.forEach(s => setorCV[s] = 0);
+  comVitima.forEach(o => { if(o.setor) setorCV[o.setor] = (setorCV[o.setor]||0)+1; });
+  const nTrab = Math.max(state.trabalhadores.length, 1);
+  const maxF = Math.max(...Object.values(setorCV), 1);
+  let freqHTML = '';
+  Object.entries(setorCV).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).forEach(([s,v]) => {
+    const tf2 = ((v / hht) * 1000000).toFixed(1);
+    const c = v > 2 ? '#f06060' : '#f5c842';
+    freqHTML += `<div class="bar-row"><div class="bar-label" title="${s}">${s}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/maxF*100).toFixed(0)}%;background:${c}"></div></div><div class="bar-val">${tf2}</div></div>`;
+  });
+  document.getElementById('freq-bars').innerHTML = freqHTML || '<div style="color:var(--text3);font-size:13px">Sem acidentes c/ vítima no período.</div>';
+
+  // Alertas
+  let alertasHTML = '';
+  state.trabalhadores.forEach(t => {
+    const d = diasParaVencer(t.aso);
+    if (d <= 30) {
+      const cls = d <= 7 ? 'badge-red' : 'badge-yellow';
+      const msg = d <= 0 ? 'VENCIDO' : `vence em ${d}d`;
+      alertasHTML += `<div class="row-item"><div><div class="row-name">${t.nome}</div><div class="row-sub">ASO · ${t.setor}</div></div><span class="badge ${cls}">${msg}</span></div>`;
+    }
+  });
+  if (!alertasHTML) alertasHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0">Nenhum vencimento próximo.</div>';
+  document.getElementById('dash-alertas-list').innerHTML = alertasHTML;
+}
+
+// ============================================================
+// OCORRÊNCIAS
+// ============================================================
+function renderOcorrencias() {
+  const tipoFiltro = document.getElementById('filter-tipo').value;
+  const setorFiltro = document.getElementById('filter-setor').value;
+
+  // populate setor filter
+  const sf = document.getElementById('filter-setor');
+  if (sf.options.length <= 1) {
+    state.setores.forEach(s => { const o = document.createElement('option'); o.textContent = s; sf.appendChild(o); });
+  }
+
+  let ocs = [...state.ocorrencias].sort((a,b) => b.data.localeCompare(a.data));
+  if (tipoFiltro) ocs = ocs.filter(o => o.tipo === tipoFiltro);
+  if (setorFiltro) ocs = ocs.filter(o => o.setor === setorFiltro);
+
+  const tbody = document.getElementById('ocorrencias-tbody');
+  if (!ocs.length) { tbody.innerHTML = `<tr><td colspan="8" class="table-empty">Nenhuma ocorrência encontrada.</td></tr>`; return; }
+
+  const tipoBadge = { 'Acidente c/ vítima':'badge-red', 'Acidente s/ vítima':'badge-yellow', 'Doença ocupacional':'badge-blue', 'Quase-acidente':'badge-gray' };
+  tbody.innerHTML = ocs.map(o => {
+    const t = getTrabalhador(o.trabalhadorId);
+    const afClass = o.afastamento === 2 ? 'badge-red' : o.afastamento === 1 ? 'badge-yellow' : 'badge-gray';
+    const afText = o.afastamento === 2 ? `>${o.dias}d` : o.afastamento === 1 ? `${o.dias}d` : 'Não';
+    const perda = o.perda > 0 ? `R$ ${o.perda.toLocaleString('pt-BR')}` : '—';
+    const catBadge = (o.tipo === 'Acidente c/ vítima' || o.tipo === 'Doença ocupacional') ? '<span class="badge badge-blue">CAT</span>' : '—';
+    return `<tr>
+      <td style="font-family:var(--mono);font-size:12px">${formatDate(o.data)}</td>
+      <td><span class="badge ${tipoBadge[o.tipo]||'badge-gray'}">${o.tipo}</span></td>
+      <td>${t ? t.nome : '—'}</td>
+      <td style="color:var(--text2)">${o.setor}</td>
+      <td><span class="badge ${afClass}">${afText}</span></td>
+      <td>${catBadge}</td>
+      <td style="font-family:var(--mono);font-size:12px">${perda}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deletarOcorrencia(${o.id})">Excluir</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function deletarOcorrencia(id) {
+  if (!confirm('Excluir esta ocorrência?')) return;
+  state.ocorrencias = state.ocorrencias.filter(o => o.id !== id);
+  saveData();
+  renderOcorrencias();
+  toast('Ocorrência excluída.');
+}
+
+// ============================================================
+// NOVA OCORRÊNCIA
+// ============================================================
+function initNova() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-data').value = today;
+
+  const sel = document.getElementById('f-trabalhador');
+  sel.innerHTML = '<option value="">— sem vítima —</option>';
+  state.trabalhadores.forEach(t => {
+    const o = document.createElement('option');
+    o.value = t.id; o.textContent = t.nome + ' (' + t.setor + ')';
+    sel.appendChild(o);
+  });
+
+  const setorSel = document.getElementById('f-setor');
+  setorSel.innerHTML = '';
+  state.setores.forEach(s => { const o = document.createElement('option'); o.textContent = s; setorSel.appendChild(o); });
+
+  toggleTipoFields();
+}
+
+function toggleTipoFields() {
+  const tipo = document.getElementById('f-tipo').value;
+  const comVitima = tipo === 'Acidente c/ vítima' || tipo === 'Doença ocupacional';
+  const semVitima = tipo === 'Acidente s/ vítima' || tipo === 'Quase-acidente';
+  document.getElementById('field-afastamento').style.display = comVitima ? '' : 'none';
+  document.getElementById('field-dias').style.display = comVitima ? '' : 'none';
+  document.getElementById('field-cid').style.display = tipo === 'Doença ocupacional' ? '' : 'none';
+  document.getElementById('field-perda').style.display = semVitima ? '' : 'none';
+  document.getElementById('field-obito').style.display = tipo === 'Acidente c/ vítima' ? '' : 'none';
+  document.getElementById('cat-aviso').style.display = comVitima ? 'flex' : 'none';
+  document.getElementById('field-trabalhador').style.display = !semVitima ? '' : 'none';
+}
+
+function salvarOcorrencia() {
+  const tipo = document.getElementById('f-tipo').value;
+  const data = document.getElementById('f-data').value;
+  const setor = document.getElementById('f-setor').value;
+  const descricao = document.getElementById('f-descricao').value;
+  if (!data || !setor || !descricao) { toast('Preencha data, setor e descrição.', 'error'); return; }
+
+  const trabId = parseInt(document.getElementById('f-trabalhador').value) || null;
+  const afastamento = parseInt(document.getElementById('f-afastamento').value) || 0;
+  const dias = parseInt(document.getElementById('f-dias').value) || 0;
+  const cid = document.getElementById('f-cid').value;
+  const perda = parseFloat(document.getElementById('f-perda').value) || 0;
+  const obito = document.getElementById('f-obito').checked;
+
+  state.ocorrencias.push({ id: state.nextId++, tipo, data, trabalhadorId: trabId, setor, afastamento, dias, perda, descricao, obito, cid });
+  saveData();
+  toast('Ocorrência registrada com sucesso!');
+  nav('ocorrencias', document.querySelectorAll('.nav-item')[1]);
+}
+
+// ============================================================
+// TRABALHADORES
+// ============================================================
+function renderTrabalhadores() {
+  const setorSel = document.getElementById('nt-setor');
+  if (setorSel.options.length === 0) {
+    state.setores.forEach(s => { const o = document.createElement('option'); o.textContent = s; setorSel.appendChild(o); });
+  }
+
+  const tbody = document.getElementById('trabalhadores-tbody');
+  if (!state.trabalhadores.length) { tbody.innerHTML = `<tr><td colspan="7" class="table-empty">Nenhum trabalhador cadastrado.</td></tr>`; return; }
+
+  tbody.innerHTML = state.trabalhadores.map(t => {
+    const d = diasParaVencer(t.aso);
+    const asoClass = d <= 7 ? 'badge-red' : d <= 30 ? 'badge-yellow' : 'badge-green';
+    const asoText = d <= 0 ? 'VENCIDO' : d <= 30 ? `vence em ${d}d` : formatDate(t.aso);
+    const nOcs = state.ocorrencias.filter(o => o.trabalhadorId === t.id).length;
+    return `<tr>
+      <td>${t.nome}</td><td style="color:var(--text2)">${t.funcao}</td><td style="color:var(--text2)">${t.setor}</td>
+      <td style="font-family:var(--mono);font-size:12px">${formatDate(t.admissao)}</td>
+      <td><span class="badge ${asoClass}">${asoText}</span></td>
+      <td style="font-family:var(--mono)">${nOcs}</td>
+      <td><button class="btn btn-sm btn-danger" onclick="deletarTrabalhador(${t.id})">Excluir</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function showAddTrabalhador() {
+  const f = document.getElementById('add-trab-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('nt-admissao').value = new Date().toISOString().split('T')[0];
+}
+
+function salvarTrabalhador() {
+  const nome = document.getElementById('nt-nome').value.trim();
+  if (!nome) { toast('Preencha o nome.', 'error'); return; }
+  state.trabalhadores.push({
+    id: state.nextId++,
+    nome, funcao: document.getElementById('nt-funcao').value,
+    setor: document.getElementById('nt-setor').value,
+    admissao: document.getElementById('nt-admissao').value,
+    aso: document.getElementById('nt-aso').value,
+    cpf: document.getElementById('nt-cpf').value
+  });
+  saveData();
+  document.getElementById('add-trab-form').style.display = 'none';
+  renderTrabalhadores();
+  toast('Trabalhador cadastrado!');
+}
+
+function deletarTrabalhador(id) {
+  if (!confirm('Excluir trabalhador?')) return;
+  state.trabalhadores = state.trabalhadores.filter(t => t.id !== id);
+  saveData();
+  renderTrabalhadores();
+  toast('Trabalhador removido.');
+}
+
+// ============================================================
+// QUADROS NR-4
+// ============================================================
+function renderQuadros() {
+  const ocs = ocorrenciasPeriodo();
+  const comV = ocs.filter(o => o.tipo === 'Acidente c/ vítima');
+  const semV = ocs.filter(o => o.tipo === 'Acidente s/ vítima');
+  const doenc = ocs.filter(o => o.tipo === 'Doença ocupacional');
+  const rel = comV.length > 0 ? (semV.length / comV.length).toFixed(1) : '—';
+  const relClass = parseFloat(rel) >= 2 ? 'badge-red' : parseFloat(rel) >= 1.5 ? 'badge-yellow' : 'badge-green';
+
+  document.getElementById('quadros-grid').innerHTML = `
+    <div class="quadro-card">
+      <div class="quadro-num">QUADRO III · NR-4</div>
+      <div class="quadro-name">Acidentes com vítimas</div>
+      <div class="quadro-desc">Taxa de frequência, índice de gravidade e óbitos por setor</div>
+      <div class="quadro-footer">
+        <span class="badge badge-blue">${comV.length} ocorrência(s) · ${periodoAtivo}</span>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="showQuadro(3)">Visualizar</button><button class="btn btn-sm btn-primary" onclick="printQuadro(3)">Imprimir</button></div>
+      </div>
+    </div>
+    <div class="quadro-card">
+      <div class="quadro-num">QUADRO IV · NR-4</div>
+      <div class="quadro-name">Doenças ocupacionais</div>
+      <div class="quadro-desc">Tipos de doença, setores dos portadores e incapacitações</div>
+      <div class="quadro-footer">
+        <span class="badge badge-blue">${doenc.length} caso(s) · ${periodoAtivo}</span>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="showQuadro(4)">Visualizar</button><button class="btn btn-sm btn-primary" onclick="printQuadro(4)">Imprimir</button></div>
+      </div>
+    </div>
+    <div class="quadro-card">
+      <div class="quadro-num">QUADRO V · NR-4 / NR-15</div>
+      <div class="quadro-name">Insalubridade</div>
+      <div class="quadro-desc">Agentes insalubres, intensidade e trabalhadores expostos</div>
+      <div class="quadro-footer">
+        <span class="badge badge-yellow">${state.agentes.length} agente(s) cadastrado(s)</span>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="showQuadro(5)">Visualizar</button><button class="btn btn-sm btn-primary" onclick="printQuadro(5)">Imprimir</button></div>
+      </div>
+    </div>
+    <div class="quadro-card">
+      <div class="quadro-num">QUADRO VI · NR-4</div>
+      <div class="quadro-name">Acidentes sem vítima</div>
+      <div class="quadro-desc">Incidentes materiais, perdas em R$ e relação s/v ÷ c/v</div>
+      <div class="quadro-footer">
+        <span class="badge ${relClass}">${semV.length} ocorrência(s) · rel. ${rel}</span>
+        <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="showQuadro(6)">Visualizar</button><button class="btn btn-sm btn-primary" onclick="printQuadro(6)">Imprimir</button></div>
+      </div>
+    </div>
+  `;
+}
+
+function showQuadro(n) {
+  const ocs = ocorrenciasPeriodo();
+  const hht = state.empresa.hht;
+  let title = '', html = '';
+
+  const thStyle = 'style="padding:8px 10px;background:#1e2030;color:#9196a8;font-size:11px;text-transform:uppercase;letter-spacing:.05em;border:1px solid rgba(255,255,255,.07);white-space:nowrap"';
+  const tdStyle = 'style="padding:8px 10px;border:1px solid rgba(255,255,255,.07);font-size:13px;color:#e8eaf0"';
+  const tblStyle = 'style="width:100%;border-collapse:collapse;font-family:DM Sans,sans-serif"';
+
+  if (n === 3) {
+    title = 'Quadro III — Acidentes com Vítimas';
+    const comV = ocs.filter(o => o.tipo === 'Acidente c/ vítima');
+    const bySetor = {};
+    state.setores.forEach(s => bySetor[s] = {total:0,af1:0,af2:0,sem:0,dias:0,obitos:0});
+    comV.forEach(o => {
+      const s = bySetor[o.setor] || {total:0,af1:0,af2:0,sem:0,dias:0,obitos:0};
+      s.total++; s.dias += (o.dias||0); if(o.obito) s.obitos++;
+      if(o.afastamento===1) s.af1++; else if(o.afastamento===2) s.af2++; else s.sem++;
+      bySetor[o.setor] = s;
+    });
+    html = `<table ${tblStyle}><thead><tr>
+      <th ${thStyle}>Setor</th><th ${thStyle}>N.º Total</th><th ${thStyle}>Afastam. ≤15d</th><th ${thStyle}>Afastam. &gt;15d</th>
+      <th ${thStyle}>Sem Afastam.</th><th ${thStyle}>Dias Perdidos</th><th ${thStyle}>Taxa Freq.</th><th ${thStyle}>Índice Grav.</th><th ${thStyle}>Óbitos</th>
+    </tr></thead><tbody>`;
+    let totT=0,totA1=0,totA2=0,totSem=0,totDias=0,totOb=0;
+    state.setores.forEach(s => {
+      const r = bySetor[s]||{total:0,af1:0,af2:0,sem:0,dias:0,obitos:0};
+      const tf2 = hht>0?((r.total/hht)*1000000).toFixed(1):0;
+      const ig2 = hht>0?((r.dias/hht)*1000000).toFixed(0):0;
+      totT+=r.total;totA1+=r.af1;totA2+=r.af2;totSem+=r.sem;totDias+=r.dias;totOb+=r.obitos;
+      html += `<tr><td ${tdStyle}>${s}</td><td ${tdStyle}>${r.total}</td><td ${tdStyle}>${r.af1}</td><td ${tdStyle}>${r.af2}</td><td ${tdStyle}>${r.sem}</td><td ${tdStyle}>${r.dias}</td><td ${tdStyle}>${tf2}</td><td ${tdStyle}>${ig2}</td><td ${tdStyle}>${r.obitos}</td></tr>`;
+    });
+    const tfT = hht>0?((totT/hht)*1000000).toFixed(1):0;
+    const igT = hht>0?((totDias/hht)*1000000).toFixed(0):0;
+    html += `<tr style="background:#252840"><td ${tdStyle}><strong>TOTAL</strong></td><td ${tdStyle}><strong>${totT}</strong></td><td ${tdStyle}>${totA1}</td><td ${tdStyle}>${totA2}</td><td ${tdStyle}>${totSem}</td><td ${tdStyle}>${totDias}</td><td ${tdStyle}><strong>${tfT}</strong></td><td ${tdStyle}><strong>${igT}</strong></td><td ${tdStyle}>${totOb}</td></tr>`;
+    html += '</tbody></table>';
+  }
+
+  if (n === 4) {
+    title = 'Quadro IV — Doenças Ocupacionais';
+    const doenc = ocs.filter(o => o.tipo === 'Doença ocupacional');
+    if (!doenc.length) { html = '<div style="padding:24px;text-align:center;color:#5a6070">Nenhuma doença ocupacional registrada no período.</div>'; }
+    else {
+      html = `<table ${tblStyle}><thead><tr><th ${thStyle}>Trabalhador</th><th ${thStyle}>CID-10</th><th ${thStyle}>Setor</th><th ${thStyle}>Afastamento</th><th ${thStyle}>Data</th></tr></thead><tbody>`;
+      doenc.forEach(o => {
+        const t = getTrabalhador(o.trabalhadorId);
+        html += `<tr><td ${tdStyle}>${t?t.nome:'—'}</td><td ${tdStyle}>${o.cid||'—'}</td><td ${tdStyle}>${o.setor}</td><td ${tdStyle}>${o.dias>0?o.dias+'d':'Não'}</td><td ${tdStyle}>${formatDate(o.data)}</td></tr>`;
+      });
+      html += '</tbody></table>';
+    }
+  }
+
+  if (n === 5) {
+    title = 'Quadro V — Insalubridade';
+    if (!state.agentes.length) { html = '<div style="padding:24px;text-align:center;color:#5a6070">Nenhum agente insalubre cadastrado. Use a tela Insalubridade para adicionar.</div>'; }
+    else {
+      html = `<table ${tblStyle}><thead><tr><th ${thStyle}>Setor</th><th ${thStyle}>Tipo</th><th ${thStyle}>Agente Identificado</th><th ${thStyle}>Intensidade/Concentração</th><th ${thStyle}>Grau</th><th ${thStyle}>Expostos</th></tr></thead><tbody>`;
+      state.agentes.forEach(a => {
+        html += `<tr><td ${tdStyle}>${a.setor}</td><td ${tdStyle}>${a.tipo}</td><td ${tdStyle}>${a.nome}</td><td ${tdStyle}>${a.intensidade}</td><td ${tdStyle}>${a.grau}</td><td ${tdStyle}>${a.expostos}</td></tr>`;
+      });
+      html += '</tbody></table>';
+    }
+  }
+
+  if (n === 6) {
+    title = 'Quadro VI — Acidentes sem Vítima';
+    const semV = ocs.filter(o => o.tipo === 'Acidente s/ vítima' || o.tipo === 'Quase-acidente');
+    const comV = ocs.filter(o => o.tipo === 'Acidente c/ vítima');
+    if (!semV.length) { html = '<div style="padding:24px;text-align:center;color:#5a6070">Nenhum acidente sem vítima registrado no período.</div>'; }
+    else {
+      const bySetor = {};
+      semV.forEach(o => { bySetor[o.setor] = (bySetor[o.setor]||{n:0,perda:0}); bySetor[o.setor].n++; bySetor[o.setor].perda+=(o.perda||0); });
+      const cvBySetor = {};
+      comV.forEach(o => cvBySetor[o.setor] = (cvBySetor[o.setor]||0)+1);
+      html = `<table ${tblStyle}><thead><tr><th ${thStyle}>Setor</th><th ${thStyle}>N.º Acid. s/ Vítima</th><th ${thStyle}>Perda Material</th><th ${thStyle}>Relação S/V ÷ C/V</th></tr></thead><tbody>`;
+      let totN=0, totP=0;
+      Object.entries(bySetor).forEach(([s,r]) => {
+        const cv = cvBySetor[s]||0;
+        const rel2 = cv>0?(r.n/cv).toFixed(1):'—';
+        totN+=r.n; totP+=r.perda;
+        html += `<tr><td ${tdStyle}>${s}</td><td ${tdStyle}>${r.n}</td><td ${tdStyle}>R$ ${r.perda.toLocaleString('pt-BR')}</td><td ${tdStyle}>${rel2}</td></tr>`;
+      });
+      const relTotal = comV.length>0?(semV.length/comV.length).toFixed(1):'—';
+      html += `<tr style="background:#252840"><td ${tdStyle}><strong>TOTAL</strong></td><td ${tdStyle}><strong>${totN}</strong></td><td ${tdStyle}><strong>R$ ${totP.toLocaleString('pt-BR')}</strong></td><td ${tdStyle}><strong>${relTotal}</strong></td></tr>`;
+      html += '</tbody></table>';
+    }
+  }
+
+  document.getElementById('qview-title').textContent = title;
+  document.getElementById('qview-body').innerHTML = html;
+  document.getElementById('qview').classList.add('open');
+}
+
+function closeQview() { document.getElementById('qview').classList.remove('open'); }
+
+function printQuadro(n) {
+  showQuadro(n);
+  setTimeout(() => window.print(), 400);
+}
+
+// ============================================================
+// CAT
+// ============================================================
+function initCAT() {
+  const sel = document.getElementById('cat-ocorrencia');
+  sel.innerHTML = '<option value="">— selecione —</option>';
+  state.ocorrencias.filter(o => o.tipo === 'Acidente c/ vítima' || o.tipo === 'Doença ocupacional').forEach(o => {
+    const t = getTrabalhador(o.trabalhadorId);
+    const opt = document.createElement('option');
+    opt.value = o.id;
+    opt.textContent = `${formatDate(o.data)} — ${t?t.nome:'(sem nome)'} — ${o.setor}`;
+    sel.appendChild(opt);
+  });
+  document.getElementById('cat-preview-area').innerHTML = '';
+}
+
+function previewCAT() {
+  const id = parseInt(document.getElementById('cat-ocorrencia').value);
+  if (!id) { document.getElementById('cat-preview-area').innerHTML = ''; return; }
+  const oc = state.ocorrencias.find(o => o.id === id);
+  const trab = getTrabalhador(oc.trabalhadorId);
+  const emp = state.empresa;
+  document.getElementById('cat-preview-area').innerHTML = `
+    <div class="cat-preview">
+      <div style="font-size:13px;font-weight:500;color:#e8eaf0;margin-bottom:12px">COMUNICAÇÃO DE ACIDENTE DE TRABALHO — CAT</div>
+      <div class="cat-field"><span class="cat-key">Empresa emitente:</span><span class="cat-val">${emp.nome}</span></div>
+      <div class="cat-field"><span class="cat-key">CNPJ:</span><span class="cat-val">${emp.cnpj}</span></div>
+      <div class="cat-field"><span class="cat-key">CNAE:</span><span class="cat-val">${emp.cnae}</span></div>
+      <div class="cat-field"><span class="cat-key">Trabalhador:</span><span class="cat-val">${trab?trab.nome:'—'}</span></div>
+      <div class="cat-field"><span class="cat-key">CPF:</span><span class="cat-val">${trab?trab.cpf:'—'}</span></div>
+      <div class="cat-field"><span class="cat-key">Função:</span><span class="cat-val">${trab?trab.funcao:'—'}</span></div>
+      <div class="cat-field"><span class="cat-key">Setor:</span><span class="cat-val">${oc.setor}</span></div>
+      <div class="cat-field"><span class="cat-key">Data do acidente:</span><span class="cat-val">${formatDate(oc.data)}</span></div>
+      <div class="cat-field"><span class="cat-key">Tipo:</span><span class="cat-val">${oc.tipo}</span></div>
+      <div class="cat-field"><span class="cat-key">Afastamento:</span><span class="cat-val">${oc.dias>0?oc.dias+' dia(s)':'Sem afastamento'}</span></div>
+      <div class="cat-field"><span class="cat-key">CID-10:</span><span class="cat-val">${oc.cid||'—'}</span></div>
+      <div class="cat-field"><span class="cat-key">Descrição:</span><span class="cat-val">${oc.descricao}</span></div>
+      <div style="margin-top:12px;font-size:11px;color:#5a6070">Base legal: art. 22, Lei 8.212/91 · Prazo: 1.º dia útil após o acidente</div>
+    </div>`;
+}
+
+function gerarCAT() {
+  const id = parseInt(document.getElementById('cat-ocorrencia').value);
+  if (!id) { toast('Selecione uma ocorrência.', 'error'); return; }
+  window.print();
+}
+
+// ============================================================
+// INSALUBRIDADE
+// ============================================================
+function renderInsalubridade() {
+  const setorSel = document.getElementById('ag-setor');
+  if (setorSel.options.length === 0) {
+    state.setores.forEach(s => { const o = document.createElement('option'); o.textContent = s; setorSel.appendChild(o); });
+  }
+  const tbody = document.getElementById('agentes-tbody');
+  if (!state.agentes.length) { tbody.innerHTML = `<tr><td colspan="7" class="table-empty">Nenhum agente cadastrado.</td></tr>`; return; }
+  const grauClass = { 'Mínimo (10%)':'badge-yellow','Médio (20%)':'badge-yellow','Máximo (40%)':'badge-red' };
+  const tipoClass = { 'Físico':'badge-blue','Químico':'badge-yellow','Biológico':'badge-red' };
+  tbody.innerHTML = state.agentes.map(a => `<tr>
+    <td>${a.setor}</td>
+    <td><span class="badge ${tipoClass[a.tipo]||'badge-gray'}">${a.tipo}</span></td>
+    <td>${a.nome}</td>
+    <td style="color:var(--text2);font-size:12px">${a.intensidade}</td>
+    <td><span class="badge ${grauClass[a.grau]||'badge-gray'}">${a.grau}</span></td>
+    <td style="font-family:var(--mono)">${a.expostos}</td>
+    <td><button class="btn btn-sm btn-danger" onclick="deletarAgente(${a.id})">Excluir</button></td>
+  </tr>`).join('');
+}
+
+function showAddAgente() {
+  const f = document.getElementById('add-agente-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+function salvarAgente() {
+  const nome = document.getElementById('ag-nome').value.trim();
+  if (!nome) { toast('Preencha o nome do agente.', 'error'); return; }
+  state.agentes.push({
+    id: state.nextId++,
+    setor: document.getElementById('ag-setor').value,
+    tipo: document.getElementById('ag-tipo').value,
+    nome, intensidade: document.getElementById('ag-intensidade').value,
+    grau: document.getElementById('ag-grau').value,
+    expostos: parseInt(document.getElementById('ag-expostos').value)||0
+  });
+  saveData();
+  document.getElementById('add-agente-form').style.display = 'none';
+  renderInsalubridade();
+  toast('Agente insalubre cadastrado!');
+}
+
+function deletarAgente(id) {
+  if (!confirm('Excluir agente?')) return;
+  state.agentes = state.agentes.filter(a => a.id !== id);
+  saveData();
+  renderInsalubridade();
+  toast('Agente removido.');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('sidebar-empresa').textContent = state.empresa.nome;
+document.getElementById('sidebar-cnpj').textContent = state.empresa.cnpj;
+document.getElementById('periodo-select').value = periodoAtivo;
+renderDashboard();
+</script>
 </body>
 </html>
-
-
